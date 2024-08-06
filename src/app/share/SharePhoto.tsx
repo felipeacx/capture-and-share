@@ -67,7 +67,7 @@ const SharePhoto = () => {
         ) : (
           images.map((image: ImageData, index) => (
             <div key={index} className="m-3">
-              <img src={image.url} alt={`Image ${index}`} className="w-[300px] h-[300]" />
+              <Image src={image.url} alt={`Image ${index}`} width={300} height={300} />
               <div className="flex justify-between items-center">
                 <span className="text-sm">{image.author}</span>
                 <div className="flex gap-5">
