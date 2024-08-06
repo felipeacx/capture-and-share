@@ -3,7 +3,7 @@ import fs from "fs"
 import path from "path"
 import { IncomingForm } from "formidable"
 import db from "@/app/data/firebase"
-import { addDoc, collection, doc, getDocs, setDoc } from "firebase/firestore"
+import { collection, doc, getDocs, setDoc } from "firebase/firestore"
 
 export const config = {
   api: {
@@ -29,7 +29,11 @@ type ResponseData = {
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   if (req.method === "GET") {
     try {
-      const imagesDir = path.join(process.cwd(), "public", "uploads")
+      const imagesDir = path.join(
+        process.env.NEXT_PUBLIC_ENVIRONMENT === "PROD" ? "/tmp" : process.cwd(),
+        "public",
+        "uploads"
+      )
 
       if (!fs.existsSync(imagesDir)) {
         fs.mkdirSync(imagesDir, { recursive: true })
@@ -85,7 +89,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         }
 
         const base64Data = file.toString().replace(/^data:image\/png;base64,/, "")
-        const saveDir = path.join(process.cwd(), "public", "uploads")
+        const saveDir = path.join(
+          process.env.NEXT_PUBLIC_ENVIRONMENT === "PROD" ? "/tmp" : process.cwd(),
+          "public",
+          "uploads"
+        )
 
         if (!fs.existsSync(saveDir)) {
           fs.mkdirSync(saveDir, { recursive: true })
