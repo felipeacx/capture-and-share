@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react"
 import { useMediaDevices } from "react-use"
 import axios from "axios"
 import Image from "next/image"
+import { decryptData } from "../data/crypto"
 
 const PhotoCapture: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -24,8 +25,8 @@ const PhotoCapture: React.FC = () => {
         videoRef.current.srcObject = mediaStream
         videoRef.current.play()
       }
-    } catch (err) {
-      console.error("Error accediendo a la camara:", err)
+    } catch (_err) {
+      setInfo("Error accediendo a la camara")
     }
   }
 
@@ -49,14 +50,15 @@ const PhotoCapture: React.FC = () => {
       try {
         const formData = new FormData()
         formData.append("file", imageSrc)
-
+        const userInfo = decryptData(window.sessionStorage.getItem("info"))
+        formData.append("email", userInfo.email)
         const response = await axios.post("/api/upload", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         })
         const result = response.data
         setInfo(result.message)
       } catch (err) {
-        console.error("Carga fallida:", err)
+        setInfo("Carga fallida")
       } finally {
         setUploading(false)
       }

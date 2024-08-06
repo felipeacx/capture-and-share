@@ -2,6 +2,8 @@ import { NextApiRequest, NextApiResponse } from "next"
 import fs from "fs"
 import path from "path"
 import { IncomingForm } from "formidable"
+import db from "@/app/data/firebase"
+import { addDoc, collection, doc, getDocs, setDoc } from "firebase/firestore"
 
 export const config = {
   api: {
@@ -9,13 +11,22 @@ export const config = {
   },
 }
 
+export type ImageData = {
+  url: string
+  id?: string
+  email?: string
+  author?: string
+  likes?: string[]
+  dislikes?: string[]
+}
+
 type ResponseData = {
   message: string
   error?: string
-  images?: string[]
+  images?: ImageData[]
 }
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   if (req.method === "GET") {
     try {
       const imagesDir = path.join(process.cwd(), "public", "uploads")
@@ -25,19 +36,30 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
       }
 
       const files = fs.readdirSync(imagesDir)
-
       const imageFiles = files.filter((file) => /\.(jpg|jpeg|png|gif)$/.test(file))
-
       const imageUrls = imageFiles.map((file) => `/uploads/${file}`)
 
-      res.status(200).json({ message: "Fotos cargadas", images: imageUrls })
+      const querySnapshot = await getDocs(collection(db, "favorites"))
+      let photos: ImageData[] = []
+      querySnapshot.forEach((doc) => {
+        imageUrls.forEach((image) => {
+          const internalId = image.split("/")[2]
+          if (internalId === doc.data().id) {
+            photos.push({
+              ...doc.data(),
+              url: "/uploads/" + doc.data().id,
+            })
+          }
+        })
+      })
+      res.status(200).json({ message: "Fotos cargadas", images: photos })
     } catch (error: any) {
       res.status(500).json({ message: "No se encontraron fotos", error: error.message })
     }
   } else if (req.method === "POST") {
     const form = new IncomingForm()
 
-    form.parse(req, (err, fields, files) => {
+    form.parse(req, async (err, fields, files) => {
       if (err) {
         res.status(500).json({ message: "Fallo al convertir los datos", error: err.message })
         return
@@ -46,6 +68,12 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
       const file = fields.file
       if (!file) {
         res.status(400).json({ message: "Foto no encontrada" })
+        return
+      }
+
+      const email = fields.email
+      if (!email) {
+        res.status(400).json({ message: "Correo no encontrado" })
         return
       }
 
@@ -63,11 +91,19 @@ export default function handler(req: NextApiRequest, res: NextApiResponse<Respon
           fs.mkdirSync(saveDir, { recursive: true })
         }
 
-        const filePath = path.join(saveDir, `image-${Date.now()}.png`)
+        const fileName = `image-${Date.now()}.png`
+        const filePath = path.join(saveDir, fileName)
         const buffer = Buffer.from(base64Data, "base64")
 
         fs.writeFileSync(filePath, buffer)
+        await setDoc(doc(db, "photos", fileName), {
+          email: email[0],
+          id: fileName,
+        })
 
+        const updateData: any = { id: fileName, author: email[0], likes: [], dislikes: [] }
+        const favoriteRef = doc(db, "favorites", fileName)
+        await setDoc(favoriteRef, updateData, { merge: true })
         res.status(200).json({ message: "Foto cargada" })
       } catch (error: any) {
         res.status(500).json({ message: "Carga fallida", error: error.message })

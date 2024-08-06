@@ -1,14 +1,14 @@
 import React from "react"
-import PhotoCapture from "./components/MainPhotoCapture"
 import NavBar from "./components/NavBar"
+import Home from "./Home"
 
-const Home: React.FC = () => {
+const HomeComponent: React.FC = () => {
   return (
     <>
       <NavBar />
-      <PhotoCapture />
+      <Home />
     </>
   )
 }
 
-export default Home
+export default HomeComponent
