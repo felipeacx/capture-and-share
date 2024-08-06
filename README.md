@@ -3,6 +3,7 @@
 ## Stack Tecnológico
 
 Frontend y API creada con Next.js, DB y autenticación Firebase
+El uso de tecnologías es principalmente porque tengo experiencia con ellas, así puedo lograr realizar todas las tareas en el mínimo tiempo.
 
 ## Instalación y ejecución del proyecto
 
