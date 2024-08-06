@@ -51,7 +51,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           if (internalId === doc.data().id) {
             photos.push({
               ...doc.data(),
-              url: "/uploads/" + doc.data().id,
+              url:
+                process.env.NEXT_PUBLIC_ENVIRONMENT === "PROD"
+                  ? "/tmp/"
+                  : "/uploads/" + doc.data().id,
             })
           }
         })
