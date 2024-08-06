@@ -53,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
               ...doc.data(),
               url:
                 process.env.NEXT_PUBLIC_ENVIRONMENT === "PROD"
-                  ? "/tmp/"
+                  ? "/tmp/" + doc.data().id
                   : "/uploads/" + doc.data().id,
             })
           }
